@@ -1,16 +1,12 @@
 // vars/GitUtils.groovy
 def checkoutRepo(String repoUrl, String credentialsId) {
-    checkout scm: [
-        $class: 'GitSCM',
-        branches: [[name: '*/main']],
-        doGenerateSubmoduleConfigurations: false,
-        extensions: [],
-        submoduleCfg: [],
-        userRemoteConfigs: [[url: repoUrl, credentialsId: credentialsId]]
-    ]
+    checkout([$class: 'GitSCM', branches: [[name: '*/main']],
+              userRemoteConfigs: [[url: repoUrl, credentialsId: credentialsId]]])
 }
 
 def createBranch(String branchName) {
+    sh "git checkout main"
+    sh "git pull"
     sh "git checkout -b ${branchName}"
     sh "git push origin ${branchName}"
 }
