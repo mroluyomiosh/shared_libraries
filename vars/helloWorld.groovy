@@ -1,5 +1,5 @@
 def call(Map config = [:]) {
-  node('any') {
+  node() {
     stage('Example') {
       steps {
         sh "echo Hello ${config.name}. Today is ${config.dayOfWeek}."
