@@ -1,8 +1,8 @@
-buildNode = "${config.BUILD_NODE}"
 def call(Map config = [:]) {
-  node(buildNode) {
-    stage('Example') {
-     sh "echo Hello ${config.name}. Today is ${config.dayOfWeek}."
+  def buildNode = "${config.BUILD_NODE}"
+    node(buildNode) {
+      stage('Example') {
+       sh "echo Hello ${config.name}. Today is ${config.dayOfWeek}."
+      }
     }
-  }
 }
