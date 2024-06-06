@@ -11,8 +11,13 @@ def call(Map params) {
         def testApplicationName = params.TEST_APPLICATION_NAME
         def branchName = params.BRANCH_NAME
 
+        stage('Prepare Workspace') {
+            // Clean the workspace directory
+            deleteDir()
+        }
+
         stage('Checkout') {
-            // Change directory to the workspace and clone the repository
+            // Clone the repository
             sh """
                 git clone ${repoUrl} .
                 git checkout main
