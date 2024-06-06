@@ -19,6 +19,8 @@ def call(Map params) {
         stage('Checkout') {
             // Clone the repository
             sh """
+                git config --global user.email "mroluyomiosh@gmail.com"
+                git config --global user.name "mroluyomiosh"
                 git clone ${repoUrl} .
                 git checkout main
             """
