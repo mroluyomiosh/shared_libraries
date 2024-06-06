@@ -1,5 +1,6 @@
 // vars/modifyAndCommitFile.groovy
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 def call(Map params) {
     node {
@@ -45,15 +46,16 @@ def call(Map params) {
         
         stage('Commit and Push Changes') {
             // Add, commit, and push changes
-            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]){
-            sh """
-                git add ${newFileName}
-                git commit -m 'Modified ${newFileName} with new parameters'
-                git push origin ${branchName}
-            """
+            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
+                sh """
+                    git add ${newFileName}
+                    git commit -m 'Modified ${newFileName} with new parameters'
+                    git push origin ${branchName}
+                """
             }
-            
         }
+        
+        def pullRequestNumber
         
         stage('Create Pull Request') {
             // Create a pull request using GitHub API
@@ -65,11 +67,38 @@ def call(Map params) {
             ])
             
             withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
-                sh """
-                    curl -X POST -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
+                def response = sh(script: """
+                    curl -X POST -H "Authorization: token ${env.GIT_PASSWORD}" -H "Content-Type: application/json" \
                     -d '${payload}' https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls
-                """
+                """, returnStdout: true).trim()
+                
+                def jsonResponse = new JsonSlurper().parseText(response)
+                pullRequestNumber = jsonResponse.number
             }
+        }
+
+        stage('Wait for Pull Request to be Merged') {
+            def isMerged = false
+            while (!isMerged) {
+                withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
+                    def response = sh(script: """
+                        curl -H "Authorization: token ${env.GIT_PASSWORD}" \
+                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${pullRequestNumber}/merge
+                    """, returnStatus: true)
+                    
+                    if (response == 204) {
+                        isMerged = true
+                    } else {
+                        echo "Pull request not merged yet. Waiting for 30 seconds before checking again."
+                        sleep(30)
+                    }
+                }
+            }
+        }
+
+        stage('Proceed with Next Steps') {
+            // Add your code for the next steps here
+            echo "Pull request has been merged. Proceeding with the next steps."
         }
     }
 }
