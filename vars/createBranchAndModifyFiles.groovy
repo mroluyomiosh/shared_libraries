@@ -45,7 +45,7 @@ def call(Map params) {
         
         stage('Commit and Push Changes') {
             // Add, commit, and push changes
-            withCredentials([string(credentialsId: 'github-token', variable: 'GIT_TOKEN')]){
+            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]){
             sh """
                 git add ${newFileName}
                 git commit -m 'Modified ${newFileName} with new parameters'
