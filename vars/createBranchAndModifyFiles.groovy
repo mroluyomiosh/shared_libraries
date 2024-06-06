@@ -13,10 +13,7 @@ def call(Map params) {
 
         stage('Prepare Workspace') {
             // Clean the workspace directory
-            sh 'echo "Current workspace contents:"'
-            sh 'ls -la ${WORKSPACE}'
-            sh 'rm -rf ${WORKSPACE}/* ${WORKSPACE}/.[!.]* ${WORKSPACE}/..?*'
-            sh 'ls -la ${WORKSPACE}'
+            deleteDir()
         }
 
         stage('Checkout') {
