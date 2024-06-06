@@ -43,11 +43,13 @@ def call(Map params) {
         
         stage('Commit and Push Changes') {
             // Add, commit, and push changes
+            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]){
             sh """
                 git add ${newFileName}
                 git commit -m 'Modified ${newFileName} with new parameters'
                 git push origin ${branchName}
             """
+            }
         }
         
         stage('Create Pull Request') {
