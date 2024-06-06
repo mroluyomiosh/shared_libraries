@@ -64,7 +64,7 @@ def call(Map params) {
                 base: "main"
             ])
             
-            withCredentials([string(credentialsId: 'github-token', variable: 'GITHUB_TOKEN')]) {
+            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                 sh """
                     curl -X POST -H "Authorization: token ${GITHUB_TOKEN}" -H "Content-Type: application/json" \
                     -d '${payload}' https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls
