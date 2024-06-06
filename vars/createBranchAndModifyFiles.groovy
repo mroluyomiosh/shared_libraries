@@ -15,7 +15,7 @@ def call(Map params) {
             // Clean the workspace directory
             sh 'echo "Current workspace contents:"'
             sh 'ls -la ${WORKSPACE}'
-            sh sh 'rm -rf ${WORKSPACE}/* ${WORKSPACE}/.[!.]* ${WORKSPACE}/..?*'
+            sh 'rm -rf ${WORKSPACE}/* ${WORKSPACE}/.[!.]* ${WORKSPACE}/..?*'
             sh 'ls -la ${WORKSPACE}'
         }
 
