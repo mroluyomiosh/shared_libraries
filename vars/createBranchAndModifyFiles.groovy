@@ -11,11 +11,6 @@ def call(Map params) {
         def testApplicationName = params.TEST_APPLICATION_NAME
         def branchName = params.BRANCH_NAME
 
-        stage('Prepare Workspace') {
-            // Clean the workspace directory
-            deleteDir()
-        }
-
         stage('Checkout') {
             // Clone the repository
             sh """
