@@ -13,7 +13,7 @@ def call(Map params) {
 
         stage('Prepare Workspace') {
             // Clean the workspace directory
-            deleteDir()
+            sh 'rm -rf *'
         }
 
         stage('Checkout') {
