@@ -14,7 +14,6 @@ def call(Map params) {
         stage('Checkout') {
             // Change directory to the workspace and clone the repository
             sh """
-                cd ${WORKSPACE}
                 git clone ${repoUrl} .
                 git checkout main
             """
