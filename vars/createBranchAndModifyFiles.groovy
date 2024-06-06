@@ -74,6 +74,7 @@ def call(Map params) {
                 
                 def jsonResponse = new JsonSlurper().parseText(response)
                 pullRequestNumber = jsonResponse.number
+                echo "Created Pull Request #${pullRequestNumber}"
             }
         }
 
@@ -83,10 +84,11 @@ def call(Map params) {
                 withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                     def response = sh(script: """
                         curl -H "Authorization: token ${env.GIT_PASSWORD}" \
-                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${pullRequestNumber}/merge
-                    """, returnStatus: true)
+                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${pullRequestNumber}
+                    """, returnStdout: true).trim()
                     
-                    if (response == 204) {
+                    def jsonResponse = new JsonSlurper().parseText(response)
+                    if (jsonResponse.merged) {
                         isMerged = true
                     } else {
                         echo "Pull request not merged yet. Waiting for 30 seconds before checking again."
