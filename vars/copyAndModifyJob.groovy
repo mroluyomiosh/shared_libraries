@@ -18,7 +18,7 @@ def call(Map params) {
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}".bytes.encodeBase64().toString()
 
                 def response = sh(script: """
-                    curl --location --request POST "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}" --header "Authorization: Basic ${auth}”
+                    curl --location --request POST "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}" --header "Authorization: Basic ${auth}"
                 """, returnStdout: true).trim()
 
                 if (response != '200' && response != '201') {
