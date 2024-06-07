@@ -74,7 +74,7 @@ def call(Map params) {
         stage('Check Pull Request Status') {
             // Check if the pull request has been merged
             def prNumber = withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) { sh(script: """
-                curl -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
+                curl -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
                 https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls | \
                 jq '.[] | select(.head.ref=="${branchName}") | .number' | head -1
             """, returnStdout: true).trim() }
@@ -83,7 +83,7 @@ def call(Map params) {
 
             while (!prMerged) {
                 prMerged = withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) { sh(script: """
-                    curl -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
+                    curl -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
                     https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${prNumber}/merge
                 """, returnStatus: true) == 204 }
 
