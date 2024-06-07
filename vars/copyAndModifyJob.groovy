@@ -11,20 +11,20 @@ def call(Map params) {
             echo "JENKINS_USER: ${env.JENKINS_USER}"
         }
 
-        stage('Check Source Job Existence') {
-            echo "Checking if the source job ${sourceJob} exists..."
+        stage('Copy Job') {
+            echo "Copying job ${sourceJob} to ${targetJob}..."
             withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
                 def response = sh(script: """
-                    curl -s -o /dev/null -w "%{http_code}" -u ${auth} "${jenkinsUrl}/job/${sourceJob}/api/xml"
+                    curl -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
                 """, returnStdout: true).trim()
 
-                if (response != '200') {
-                    error "Source job ${sourceJob} does not exist. HTTP response code: ${response}"
+                if (response != '200' && response != '201') {
+                    error "Failed to copy job. HTTP response code: ${response}"
                 } else {
-                    echo "Source job ${sourceJob} exists. HTTP response code: ${response}"
+                    echo "Job ${sourceJob} successfully copied to ${targetJob}. HTTP response code: ${response}"
                 }
             }
         }
