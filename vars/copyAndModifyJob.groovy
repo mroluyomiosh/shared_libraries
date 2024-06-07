@@ -17,8 +17,9 @@ def call(Map params) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
+                def base64Auth = "${auth.bytes.encodeBase64().toString()}"
                 def response = sh(script: """
-                    curl -s -o /dev/null -w '%{http_code}' -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
+                    curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Basic ${base64Auth}" -H "Content-Type: application/xml" --data-binary @job-config.xml "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
                 """, returnStdout: true).trim()
 
                 if (response != '200' && response != '201') {
