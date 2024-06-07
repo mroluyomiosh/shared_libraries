@@ -91,4 +91,24 @@ def call(Map params) {
                 withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                     def response = sh(script: """
                         curl -H "Authorization: token ${env.GIT_PASSWORD}" \
-                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.g
+                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${pullRequestNumber}
+                    """, returnStdout: true).trim()
+                    
+                    def jsonResponse = new JsonSlurper().parseText(response)
+                    if (jsonResponse.merged) {
+                        isMerged = true
+                    } else {
+                        echo "Pull request not merged yet. Waiting for 30 seconds before checking again."
+                        sleep(30)
+                    }
+                }
+            }
+            echo "Pull request #${pullRequestNumber} has been merged."
+        }
+
+        stage('Proceed with Next Steps') {
+            echo "Pull request has been merged. Proceeding with the next steps."
+            // Add your code for the next steps here
+        }
+    }
+}
