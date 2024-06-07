@@ -28,34 +28,5 @@ def call(Map params) {
                 }
             }
         }
-
-        stage('Modify Job') {
-            echo "Modifying job ${targetJob}..."
-            withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
-                def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
-
-                def jobConfig = sh(script: """
-                    curl -s -u ${auth} "${env.JENKINS_URL}/job/${targetJob}/config.xml"
-                """, returnStdout: true).trim()
-
-                echo "Initial job configuration: ${jobConfig}"
-
-                parameters.each { key, value ->
-                    jobConfig = jobConfig.replaceAll(key, value)
-                }
-
-                echo "Modified job configuration: ${jobConfig}"
-
-                writeFile(file: 'job-config.xml', text: jobConfig)
-                def updateResponse = sh(script: """
-                    curl -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} -H "Content-Type: application/xml" --data-binary @job-config.xml "${env.JENKINS_URL}/job/${targetJob}/config.xml"
-                """, returnStdout: true).trim()
-
-                if (updateResponse != '200' && updateResponse != '201') {
-                    error "Failed to update job configuration. HTTP response code: ${updateResponse}"
-                } else {
-                    echo "Job configuration successfully updated. HTTP response code: ${updateResponse}"
-                }
-            }
     }
 }
