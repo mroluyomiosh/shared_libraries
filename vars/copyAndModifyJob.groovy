@@ -11,11 +11,12 @@ def call(Map params) {
             // Use Jenkins REST API to copy job
             withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
                 def jenkinsUrl = env.JENKINS_URL
-                def auth = '${env.JENKINS_USER}:${env.JENKINS_TOKEN}'
+                def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
-                sh '''
+                echo "Running curl to copy job with URL: ${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
+                sh """
                     curl -X POST -u ${auth} ${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}
-                '''
+                """
             }
         }
 
