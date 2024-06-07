@@ -19,7 +19,7 @@ def call(Map params) {
 
                 def base64Auth = "${auth.bytes.encodeBase64().toString()}"
                 def response = sh(script: """
-                    curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Basic ${base64Auth}" -H "Content-Type: application/xml" "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
+                    curl -s -o /dev/null -w "%{http_code}" -X POST -H "Authorization: Basic ${base64Auth}" "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
                 """, returnStdout: true).trim()
 
                 if (response != '200' && response != '201') {
