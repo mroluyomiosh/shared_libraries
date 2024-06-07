@@ -6,17 +6,26 @@ def call(Map params) {
     def parameters = params.PARAMETERS
 
     node {
-        stage('Copy Job') {
-            echo "Copying job ${sourceJob} to ${targetJob}..."
-            // Use Jenkins REST API to copy job
+        stage('Debug Environment Variables') {
+            echo "JENKINS_URL: ${env.JENKINS_URL}"
+            echo "JENKINS_USER: ${env.JENKINS_USER}"
+        }
+
+        stage('Check Source Job Existence') {
+            echo "Checking if the source job ${sourceJob} exists..."
             withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
-                echo "Running curl to copy job with URL: ${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
-                sh """
-                    curl -X POST -u ${auth} ${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}
-                """
+                def response = sh(script: """
+                    curl -s -o /dev/null -w "%{http_code}" -u ${auth} "${jenkinsUrl}/job/${sourceJob}/api/json"
+                """, returnStdout: true).trim()
+
+                if (response != '200') {
+                    error "Source job ${sourceJob} does not exist. HTTP response code: ${response}"
+                } else {
+                    echo "Source job ${sourceJob} exists. HTTP response code: ${response}"
+                }
             }
         }
 
