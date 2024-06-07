@@ -18,7 +18,7 @@ def call(Map params) {
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
                 def response = sh(script: """
-                    curl -s -o /dev/null -w "%{http_code}" -u ${auth} "${jenkinsUrl}/job/${sourceJob}/api/json"
+                    curl -s -o /dev/null -w "%{http_code}" -u ${auth} "${jenkinsUrl}job/${sourceJob}/api/json"
                 """, returnStdout: true).trim()
 
                 if (response != '200') {
