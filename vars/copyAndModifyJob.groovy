@@ -14,7 +14,7 @@ def call(Map params) {
                 def auth = '${env.JENKINS_USER}:${env.JENKINS_TOKEN}'
 
                 sh '''
-                    echo ${jenkinsUrl}
+                    echo ${env.JENKINS_URL}
                     curl -X POST -u ${auth} ${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}
                 '''
             }
