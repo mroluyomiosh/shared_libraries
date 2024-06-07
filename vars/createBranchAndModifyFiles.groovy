@@ -95,9 +95,8 @@ def call(Map params) {
                     """, returnStdout: true).trim()
                     
                     def jsonResponse = new JsonSlurper().parseText(response)
-                    if (jsonResponse.merged) {
-                        isMerged = true
-                    } else {
+                    isMerged = jsonResponse.merged ?: false
+                    if (!isMerged) {
                         echo "Pull request not merged yet. Waiting for 30 seconds before checking again."
                         sleep(30)
                     }
