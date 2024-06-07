@@ -17,9 +17,9 @@ def call(Map params) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
 
-                def response = sh(script: '''
+                def response = sh(script: """
                     curl -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
-                ''', returnStdout: true).trim()
+                """, returnStdout: true).trim()
 
                 if (response != '200' && response != '201') {
                     error "Failed to copy job. HTTP response code: ${response}"
