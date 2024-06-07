@@ -1,5 +1,5 @@
+/ vars/modifyAndCommitFile.groovy
 import groovy.json.JsonOutput
-import groovy.json.JsonSlurper
 
 def call(Map params) {
     node {
@@ -45,11 +45,11 @@ def call(Map params) {
         
         stage('Commit and Push Changes') {
             // Add, commit, and push changes
-            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                 sh """
                     git add ${newFileName}
                     git commit -m 'Modified ${newFileName} with new parameters'
-                    git push https://${GIT_USERNAME}:${GIT_PASSWORD}@${repoUrl.split('https://')[1]} ${branchName}
+                    git push origin ${branchName}
                 """
             }
         }
@@ -63,33 +63,11 @@ def call(Map params) {
                 base: "main"
             ])
             
-            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                 sh """
                     curl -X POST -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
                     -d '${payload}' https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls
                 """
-            }
-        }
-
-        stage('Check Pull Request Status') {
-            // Check if the pull request has been merged
-            withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                def prNumber = sh(script: """
-                    curl -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
-                    https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls | \
-                    jq '.[] | select(.head.ref=="${branchName}") | .number' | head -1
-                """, returnStdout: true).trim()
-
-                def prMerged = sh(script: """
-                    curl -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
-                    https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${prNumber}/merge
-                """, returnStatus: true) == 204
-
-                if (prMerged) {
-                    echo "Pull request #${prNumber} has been merged."
-                } else {
-                    error "Pull request #${prNumber} has not been merged yet."
-                }
             }
         }
     }
