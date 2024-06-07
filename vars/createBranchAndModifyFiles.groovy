@@ -1,5 +1,6 @@
 // vars/modifyAndCommitFile.groovy
 import groovy.json.JsonOutput
+import groovy.json.JsonSlurper
 
 def call(Map params) {
     node {
@@ -12,11 +13,13 @@ def call(Map params) {
         def branchName = params.BRANCH_NAME
 
         stage('Prepare Workspace') {
+            echo "Preparing workspace..."
             // Clean the workspace directory
             deleteDir()
         }
 
         stage('Checkout') {
+            echo "Checking out repository..."
             // Clone the repository
             sh """
                 git config --global user.email "mroluyomiosh@gmail.com"
@@ -27,11 +30,13 @@ def call(Map params) {
         }
         
         stage('Create Feature Branch') {
+            echo "Creating feature branch ${branchName}..."
             // Create a new feature branch
             sh "git checkout -b ${branchName}"
         }
         
         stage('Copy and Modify File') {
+            echo "Copying and modifying file ${originalFile} to ${newFileName}..."
             // Copy and rename the file
             sh "cp ${originalFile} ${newFileName}"
 
@@ -44,6 +49,7 @@ def call(Map params) {
         }
         
         stage('Commit and Push Changes') {
+            echo "Committing and pushing changes..."
             // Add, commit, and push changes
             withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
                 sh """
@@ -54,7 +60,10 @@ def call(Map params) {
             }
         }
         
+        def pullRequestNumber
+        
         stage('Create Pull Request') {
+            echo "Creating pull request..."
             // Create a pull request using GitHub API
             def payload = JsonOutput.toJson([
                 title: "Feature: Modify ${newFileName}",
@@ -64,11 +73,42 @@ def call(Map params) {
             ])
             
             withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
-                sh """
-                    curl -X POST -H "Authorization: token ${GIT_PASSWORD}" -H "Content-Type: application/json" \
+                def response = sh(script: """
+                    curl -X POST -H "Authorization: token ${env.GIT_PASSWORD}" -H "Content-Type: application/json" \
                     -d '${payload}' https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls
-                """
+                """, returnStdout: true).trim()
+                
+                def jsonResponse = new JsonSlurper().parseText(response)
+                pullRequestNumber = jsonResponse.number
+                echo "Created Pull Request #${pullRequestNumber}"
             }
+        }
+
+        stage('Wait for Pull Request to be Merged') {
+            echo "Waiting for pull request #${pullRequestNumber} to be merged..."
+            def isMerged = false
+            while (!isMerged) {
+                withCredentials([gitUsernamePassword(credentialsId: 'github-token', gitToolName: 'Default')]) {
+                    def response = sh(script: """
+                        curl -H "Authorization: token ${env.GIT_PASSWORD}" \
+                        https://api.github.com/repos/${repoUrl.split('/')[3]}/${repoUrl.split('/')[4].replace('.git', '')}/pulls/${pullRequestNumber}
+                    """, returnStdout: true).trim()
+                    
+                    def jsonResponse = new JsonSlurper().parseText(response)
+                    if (jsonResponse.merged) {
+                        isMerged = true
+                    } else {
+                        echo "Pull request not merged yet. Waiting for 30 seconds before checking again."
+                        sleep(30)
+                    }
+                }
+            }
+            echo "Pull request #${pullRequestNumber} has been merged."
+        }
+
+        stage('Proceed with Next Steps') {
+            echo "Pull request has been merged. Proceeding with the next steps."
+            // Add your code for the next steps here
         }
     }
 }
