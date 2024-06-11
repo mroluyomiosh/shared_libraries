@@ -16,8 +16,10 @@ def call(Map params) {
             withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
+                
 
-                def response = sh(script: """
+                withEnv(["AUTH=${auth}"]) {
+                    def response = sh(script: """
                     curl -L -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
                 """, returnStdout: true).trim()
 
