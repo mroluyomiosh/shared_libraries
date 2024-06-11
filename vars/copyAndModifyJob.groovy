@@ -16,17 +16,15 @@ def call(Map params) {
             withCredentials([string(credentialsId: 'jenkins-api-token', variable: 'JENKINS_TOKEN')]) {
                 def jenkinsUrl = env.JENKINS_URL
                 def auth = "${env.JENKINS_USER}:${env.JENKINS_TOKEN}"
-                
 
-                withEnv(["AUTH=${auth}"]) {
-                    def response = sh(script: """
-                        curl -L -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
-                    """, returnStdout: true).trim()
+                def response = sh(script: """
+                    curl -L -s -o /dev/null -w "%{http_code}" -X POST -u ${auth} "${jenkinsUrl}/createItem?name=${targetJob}&mode=copy&from=${sourceJob}"
+                """, returnStdout: true).trim()
 
-                    if (response != '200' && response != '201') {
-                        error "Failed to copy job. HTTP response code: ${response}"
-                    } else {
-                        echo "Job ${sourceJob} successfully copied to ${targetJob}. HTTP response code: ${response}"
+                if (response != '200' && response != '201') {
+                    error "Failed to copy job. HTTP response code: ${response}"
+                } else {
+                    echo "Job ${sourceJob} successfully copied to ${targetJob}. HTTP response code: ${response}"
                 }
             }
         }
